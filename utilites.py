@@ -36,3 +36,6 @@ def compare(S1,S2):
         count += S2.count(ngram)
 
     return count/max(len(S1), len(S2))
+
+if __name__ == "__main__":
+    print(compare('привет', 'првиет'))
