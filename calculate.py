@@ -28,7 +28,7 @@ from rutermextract import TermExtractor as TE
 В данном случае можно согласиться с А.А. Земляковским и с румынским 
 исследователем Альбертом Ковачем, считающими, что дактиль иллюстрирует символ. 
 Аллегория неумеренно осознаёт сюжетный амфибрахий.
-"""
+""".lower()
 
 физика = """
 Тема: «Электронный эксимер: предпосылки и развитие»
@@ -49,29 +49,21 @@ from rutermextract import TermExtractor as TE
 однородно. Сингулярность изотропно искажает квант. Расслоение вращает 
 сверхпроводник. Солитон, в отличие от классического случая, неустойчив 
 относительно гравитационных возмущений.
-"""
+""".lower()
 
 def get_udk(text, udk):
-    terms = [ t.normalized for t in TE()(text)]
-    for code, value in [ (k, udk[k]['text']) for k in udk.keys() ]:
-        rez = []
-        for term in terms:
-            try:
-                words_a = term.split()
-                words_b = value.split()
-                q = 0
-                
-                for w1 in words_a:
-                    for w2 in words_b:
-                        q += compare(w1.lower(), w2.lower())
-                rez += [(term, value, q / max(len(words_a), len(words_b)))]
-            except AttributeError:
-                pass
-            except Exception as e:
-                raise e
-        print(code, value, sorted(rez, key = lambda x:x[2]))
+    terms_w = [ (t.normalized, t.count) for t in TE()(text)]
+    terms = set([ _[0] for _ in terms_w ])
+    rez = {}
+    for code, udk_terms in [ (k, set(udk[k]['terms'])) for k in udk.keys() if udk[k]['terms'] ]:
+        x = terms & udk_terms
+        if x: 
+            parts = code.split('.')
+            print(parts)
+        
+    return rez
     
 
 if __name__ == '__main__':
-    udk = load('udk.json')
+    udk = load('indexed.udk.json')
     print(get_udk(физика, udk))
