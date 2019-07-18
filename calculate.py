@@ -53,15 +53,25 @@ from rutermextract import TermExtractor as TE
 
 def get_udk(text, udk):
     terms = [ t.normalized for t in TE()(text)]
-    for code, value in [ a, b['text'] for a, b in udk.items()]:
+    for code, value in [ (k, udk[k]['text']) for k in udk.keys() ]:
+        rez = []
         for term in terms:
-            words_a = term.split()
-            words_b = value.split()
-            q = 1
-            
-            q *= compare()
+            try:
+                words_a = term.split()
+                words_b = value.split()
+                q = 0
+                
+                for w1 in words_a:
+                    for w2 in words_b:
+                        q += compare(w1.lower(), w2.lower())
+                rez += [(term, value, q / max(len(words_a), len(words_b)))]
+            except AttributeError:
+                pass
+            except Exception as e:
+                raise e
+        print(code, value, sorted(rez, key = lambda x:x[2]))
     
 
 if __name__ == '__main__':
     udk = load('udk.json')
-    print(get_udk(литературоведение), udk)
+    print(get_udk(физика, udk))
