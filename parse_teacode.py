@@ -11,14 +11,12 @@ import re
 from bs4 import BeautifulSoup as BS
 from requests import get
 from requests.models import MissingSchema
-from utilites import load, dump
+from utilites import dump
 
 from sys import stderr
 
 udk = {}
 parsed = set([])
-
-N = 4
 
 def parse_udk(url, udk, parsed):
     
@@ -30,12 +28,13 @@ def parse_udk(url, udk, parsed):
             return url
     
     try:
-        assert url not in parsed
+        assert url not in parsed, (0, 'URL is parsed')
         parsed |= {url}
         
         base = get_base_url(url)
         
         teacode = BS(get(url).content, "lxml")
+        assert teacode.find('h1').string.count('404') == 0, (404, 'Page not foud')
         x = teacode.find('tr')
         
         while 1:
@@ -57,7 +56,7 @@ def parse_udk(url, udk, parsed):
             try:
                 proceed = 1
                 code, value, _ = [ c for c in tr('td')]
-                assert re.match('\d',code.string) 
+                assert re.match('\d',code.string), (1, 'No code in cell')
                 url = base + code.find('a')['href'].strip('.')
             except AssertionError:
                 proceed = 0
@@ -74,31 +73,10 @@ def parse_udk(url, udk, parsed):
                 dump(udk, 'udk.json', quiet=1)
                 parse_udk(url, udk, parsed)
 
-    except (AssertionError, MissingSchema):
-        print(url, file = stderr)
+    except (AssertionError, MissingSchema) as e:
+        print(url, e, file = stderr)
         pass
-parse_udk('https://www.teacode.com/online/udc/', udk, parsed)
-#parse_udk('https://www.teacode.com/online/udc//1/159.925.html', udk, parsed)
-
-print(udk)
-
-
-"""
-        
-        code = a.string
-        td = a.parent.parent.nextSibling
-        while 1:
-            if td != '\n':
-                break
-            else:
-                td = td.nextSibling
-        try:
-            value = td.string
-        except AttributeError:
-            print(url, code, td, table)
-            value = ''
-        print(url, code, value)
-        
-        
-        
-"""
+    
+if __name__ == '__main__':
+    parse_udk('https://www.teacode.com/online/udc/', udk, parsed)
+#    parse_udk('https://www.teacode.com/online/udc/57/576.53.html', udk, parsed)
